@@ -1,2 +1,2 @@
 # rgb-camera-calibration
-Repository for calibrate ssimple rgb cameras.
+Repository for calibrate simple rgb cameras.
