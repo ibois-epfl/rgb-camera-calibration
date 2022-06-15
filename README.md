@@ -1,4 +1,12 @@
-# rgb-camera-calibration
+
+<h1 align="rgb-camera-calibration">augmented-stacking</h1>
+
+<p align="center">
+    <img src="./calibcalib.gif" width="600">
+</p>
+
+
+
 
 Repository for calibrate simple monocular rgb cameras with opencv library.
 
