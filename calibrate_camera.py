@@ -4,7 +4,6 @@
 import numpy as np
 import cv2 as cv
 import glob
-import pickle
 
 
 ################ FIND CHESSBOARD CORNERS - OBJECT POINTS AND IMAGE POINTS #############################
@@ -70,7 +69,9 @@ print("[INFO] cameraMatrix: \n", cameraMatrix)
 print("[INFO] dist: \n", dist)
 print("[INFO] tvecs: \n", tvecs)
 
-cam_calib = {"cam_matrix": cameraMatrix,
-             "dist_coeffs": dist}
-with open("cam_calib.p", "wb") as f:
-    pickle.dump(cam_calib, f)
+# save the camera calibration results a json file
+with open("camera_calibration.json", "w") as f:
+    json.dump({"cameraMatrix": cameraMatrix.tolist(),
+               "dist": dist.tolist(),
+               "rvecs": rvecs.tolist(),
+               "tvecs": tvecs.tolist()}, f)
