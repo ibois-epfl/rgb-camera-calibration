@@ -12,7 +12,10 @@ Repository for calibrate simple monocular rgb cameras with opencv library.
 
 </b>
 
-# A bit of theory behind camera calibration
+## How it works
+
+
+## A bit of theory behind camera calibration
 
 A camera has two types of parameters which describes itss model: `intrinsics` and `extrinsics`. These parameters describes how the camera works.
 
