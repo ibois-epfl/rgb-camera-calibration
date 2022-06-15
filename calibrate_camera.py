@@ -4,7 +4,7 @@
 import numpy as np
 import cv2 as cv
 import glob
-
+import json
 
 ################ FIND CHESSBOARD CORNERS - OBJECT POINTS AND IMAGE POINTS #############################
 
@@ -72,6 +72,4 @@ print("[INFO] tvecs: \n", tvecs)
 # save the camera calibration results a json file
 with open("camera_calibration.json", "w") as f:
     json.dump({"cameraMatrix": cameraMatrix.tolist(),
-               "dist": dist.tolist(),
-               "rvecs": rvecs.tolist(),
-               "tvecs": tvecs.tolist()}, f)
+               "distortion": dist.tolist()}, f, indent=2)
