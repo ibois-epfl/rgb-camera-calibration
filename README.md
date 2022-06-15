@@ -1,5 +1,5 @@
 
-<h1 align="rgb-camera-calibration">augmented-stacking</h1>
+<h1 align="center">rgb-camera-calibration</h1>
 
 <p align="center">
     <img src="./calibcalib.gif" width="600">
