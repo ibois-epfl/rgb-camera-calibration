@@ -5,10 +5,9 @@
     <img src="./calibcalib.gif" width="600">
 </p>
 
-
-
-
-Repository for calibrate simple monocular rgb cameras with opencv library.
+<p align="center">
+    Repository for calibrate simple monocular rgb cameras with opencv library.
+</p>
 
 </b>
 
