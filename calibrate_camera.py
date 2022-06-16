@@ -69,8 +69,9 @@ def main(chessboard_horizontal : int,
     print("[INFO] Printing results json file ..")
     print("[INFO] Saving camera 3x3 matrix and vector of distortion coefficients")
     with open("camera_calibration.json", "w") as f:
-        json.dump({"cameraMatrix": cameraMatrix.tolist(),
-                "distortion": dist.tolist()}, f, indent=2)
+        json.dump({"cameraRes" : [int(frame_width), int(frame_height)],
+                   "cameraMatrix": cameraMatrix.tolist(),
+                   "distortion": dist.tolist()}, f, indent=2)
 
 
 if __name__ == '__main__':

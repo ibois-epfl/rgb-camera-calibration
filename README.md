@@ -17,6 +17,7 @@
 ```bash
 ./capture_img.py -I 2
 ```
+Where `-I 2` indicates the index of the camera in respect to your usb ports.
 
 **[2]** For running the calibration use the tag `-H` for the horizontal intern corners of the chessboard's squares, `-V` the same for the vertical and `-S` for the size in mm of a single square:
 ```bash
