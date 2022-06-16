@@ -14,6 +14,15 @@ Repository for calibrate simple monocular rgb cameras with opencv library.
 
 ## How it works
 
+**[1]** Capture images with:
+```bash
+./capture_img.py -I 2
+```
+
+**[2]** For running the calibration use the tag `-H` for the horizontal intern corners of the chessboard's squares, `-V` the same for the vertical and `-S` for the size in mm of a single square:
+```bash
+./calibrate_camera.py -H 19 -V 13 -S 20
+```
 
 ## A bit of theory behind camera calibration
 
