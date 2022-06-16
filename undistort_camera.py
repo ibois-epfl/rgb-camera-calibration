@@ -22,96 +22,42 @@ def main(camera_index : int,
     if int(cap.get(cv.CAP_PROP_FRAME_WIDTH))!=calib_w and int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))!=calib_h:
         sys.exit("[ERROR] camera width and height not corresponding with current camera res")
 
-
     newCameraMatrix, roi = cv.getOptimalNewCameraMatrix(calib_mtx,
                                                         calib_dist,
                                                         (calib_w,calib_h),
                                                         1,
                                                         (calib_w,calib_h))
     x, y, w, h = roi
-    
 
-    # i = 0
     while True:
         ret, img = cap.read()
 
-
-        # undistort
+        # undistort method 1
         dst_1 = cv.undistort(img,
                            calib_mtx,
                            calib_dist,
                            None,
                            newCameraMatrix)
-        # crop image
         dst_1 = dst_1[y:y+h, x:x+w]
-        # crop the image
         cv.imshow('caliResult1', dst_1)
 
-
-
-        mapx, mapy = cv.initUndistortRectifyMap(calib_mtx,
-                                                calib_dist,
-                                                None,
-                                                newCameraMatrix,
-                                                (calib_w,calib_h),
-                                                5)
-        dst_2 = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
-        cv.imshow('caliResult2', dst_2)
-
-
-
-
-
-        # sho_frame = frame.copy()
-        # # cv.putText(sho_frame, "Press 'Backspace' to capture", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-        # cv.putText(sho_frame, "Press 'q' to exit", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-        # cv.imshow("preview", sho_frame)
+        # # undistort method 2
+        # mapx, mapy = cv.initUndistortRectifyMap(calib_mtx,
+        #                                         calib_dist,
+        #                                         None,
+        #                                         newCameraMatrix,
+        #                                         (calib_w,calib_h),
+        #                                         5)
+        # dst_2 = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
+        # cv.imshow('caliResult2', dst_2)
         
         key = cv.waitKey(1)
-        # if key == 32:  # backspace
-        #     cv.imwrite("images/img" + str(i) + ".png", frame)
-        #     i += 1
-        #     print(f"[INFO ]Image {i} saved")
         if key == ord("q"):
             print("[INFO] exiting...")
             break
 
     cap.release()
     cv.destroyAllWindows()
-
-
-
-    # img = cv.imread('cali5.png')
-    # h,  w = img.shape[:2]
-    
-    # newCameraMatrix, roi = cv.getOptimalNewCameraMatrix(cameraMatrix,
-    #                                                     dist,
-    #                                                     (calib_w,calib_h),
-    #                                                     1,
-    #                                                     (calib_w,calib_h))
-
-
-
-    # # Undistort
-    # dst = cv.undistort(img, cameraMatrix, dist, None, newCameraMatrix)
-
-    # # crop the image
-    # x, y, w, h = roi
-    # dst = dst[y:y+h, x:x+w]
-    # cv.imwrite('caliResult1.png', dst)
-
-
-
-    # # Undistort with Remapping
-    # mapx, mapy = cv.initUndistortRectifyMap(cameraMatrix, dist, None, newCameraMatrix, (w,h), 5)
-    # dst = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
-
-    # # crop the image
-    # x, y, w, h = roi
-    # dst = dst[y:y+h, x:x+w]
-    # cv.imwrite('caliResult2.png', dst)
-
-
 
 
 if __name__ == '__main__':
