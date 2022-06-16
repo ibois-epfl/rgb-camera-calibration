@@ -57,12 +57,17 @@ def main(chessboard_horizontal : int,
 
     ret, cameraMatrix, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, frameSize, None, None)
 
-    print("[INFO] ret: \n", ret)
-    print("[INFO] cameraMatrix: \n", cameraMatrix)
-    print("[INFO] dist: \n", dist)
-    print("[INFO] tvecs: \n", tvecs)
+    # show cameras with translation vectors and rotation in a plot
+
+
+    print("[INFO] ret: \n", ret)  # ?
+    print("[INFO] cameraMatrix: \n", cameraMatrix)  # A = [fx 0 cx; 0 fy cy; 0 0 1] (linear distortion)
+    print("[INFO] dist: \n", dist)  # distortion coefficients (additional non-linear distortion)
+    print("[INFO] tvecs: \n", tvecs)  # translations for each camera pose
+    print("[INFO] tvecs: \n", rvecs)  # rotations for each camera pose
 
     print("[INFO] Printing results json file ..")
+    print("[INFO] Saving camera 3x3 matrix and vector of distortion coefficients")
     with open("camera_calibration.json", "w") as f:
         json.dump({"cameraMatrix": cameraMatrix.tolist(),
                 "distortion": dist.tolist()}, f, indent=2)

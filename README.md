@@ -39,11 +39,16 @@ v = [Z]
     [γ]
 ``` 
 
-On the other hand, the `intrinsics` describes how the camera maps a 3D world point on to the 2D image plane using a *pinhole camera model*. These internal parameters are composed by 4 or 5 elements. If you want to remove *distortion* (e.g. sscaling, skewing, barrel, pincushion or tangential distortion) from your images, this what you need to compute.
+On the other hand, the `intrinsics` describes how the camera maps a 3D world point on to the 2D image plane using a *pinhole camera model*. These internal parameters are composed by 4 or 5 elements. If you want to remove *distortion* (e.g. sscaling, skewing, barrel, pincushion or tangential distortion) from your images, this what you need to compute. The opencv methods output this matrix (linear distortion or camera intrisics) and a list of distortion coefficients (non-linear distortion for e.g. barrel correction).
 
 ```
-    [  f   fβ   Δx   
-A =    0   αf   Δy
+    [  fx   0   Δx   
+A =    0   fy   Δy
        0    0    1  ]    
 ```
+Where:
+
+`fx`, `fy` = **focal length**, it's the distance between the pinhole and the image plane. It is measured in pixel and these two values, in a true pinhole camera, are almost equivalent. 
+
+`Δx`, `Δy` = **principal point offset**, it's the camera's principal axis, the line perpendicular to the image plane that passes through the pinhole.
 
