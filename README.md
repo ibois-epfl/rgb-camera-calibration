@@ -23,6 +23,8 @@ Repository for calibrate simple monocular rgb cameras with opencv library.
 ```bash
 ./calibrate_camera.py -H 19 -V 13 -S 20
 ```
+You will get out a json like this one:
+https://github.com/ibois-epfl/rgb-camera-calibration/blob/ced37c009627c7d429bf723992eb665b6f852c1a/camera_calibration.json#L1-L28
 
 ## A bit of theory behind camera calibration
 
