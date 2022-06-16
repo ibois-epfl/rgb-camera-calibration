@@ -5,71 +5,95 @@ import numpy as np
 import cv2 as cv
 import glob
 import json
+import argparse
 
-################ FIND CHESSBOARD CORNERS - OBJECT POINTS AND IMAGE POINTS #############################
+def main(chessboard_horizontal : int,
+         chessboard_vertical : int,
+         chessboard_size : int) -> None:
 
-# number of internal corners in the chessboard
-chessboardSize = (19,13)
+    chessboardSize = (chessboard_horizontal,chessboard_vertical)  # e.g. (19,13)
 
-# camera frame size
-with open("frame_resolution.txt", "r") as f:
-    frame_width, frame_height = f.read().split()
-frameSize = (int(frame_width),int(frame_height))
-print(f"[INFO] Camera frame width: {frame_width}")
-print(f"[INFO] Camera frame height: {frame_height}")
-
-# termination criteria
-criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-
-# prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-objp = np.zeros((chessboardSize[0] * chessboardSize[1], 3), np.float32)
-objp[:,:2] = np.mgrid[0:chessboardSize[0],0:chessboardSize[1]].T.reshape(-1,2)
-
-size_of_chessboard_squares_mm = 20
-objp = objp * size_of_chessboard_squares_mm
+    # camera frame size
+    with open("frame_resolution.txt", "r") as f:
+        frame_width, frame_height = f.read().split()
+    frameSize = (int(frame_width),int(frame_height))
+    print(f"[INFO] Camera frame width: {frame_width}")
+    print(f"[INFO] Camera frame height: {frame_height}")
 
 
-# Arrays to store object points and image points from all the images.
-objpoints = [] # 3d point in real world space
-imgpoints = [] # 2d points in image plane.
+    criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
+    objp = np.zeros((chessboardSize[0] * chessboardSize[1], 3), np.float32)
+    objp[:,:2] = np.mgrid[0:chessboardSize[0],0:chessboardSize[1]].T.reshape(-1,2)
+
+    size_of_chessboard_squares_mm = chessboard_size  # e.g. 20mm
+    objp = objp * size_of_chessboard_squares_mm
+
+    objpoints = [] # 3d point in real world space
+    imgpoints = [] # 2d points in image plane.
 
 
-images = glob.glob('./images/*.png')
+    images = glob.glob('./images/*.png')
 
-for image in images:
-    print(image)
+    for image in images:
 
-    img = cv.imread(image)
-    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        img = cv.imread(image)
+        gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
-    # Find the chess board corners
-    ret, corners = cv.findChessboardCorners(gray, chessboardSize, None)
-    print(ret)
-    print(corners)
+        ret, corners = cv.findChessboardCorners(gray, chessboardSize, None)
 
-    # If found, add object points, image points (after refining them)
-    if ret == True:
+        if ret == True:
 
-        objpoints.append(objp)
-        corners2 = cv.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
-        imgpoints.append(corners)
+            objpoints.append(objp)
+            corners2 = cv.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
+            imgpoints.append(corners)
 
-        # Draw and display the corners
-        cv.drawChessboardCorners(img, chessboardSize, corners2, ret)
-        cv.imshow('img', img)
-        cv.waitKey(300)
+            cv.drawChessboardCorners(img, chessboardSize, corners2, ret)
+            cv.imshow('img', img)
+            cv.waitKey(300)
 
-cv.destroyAllWindows()
+    cv.destroyAllWindows()
 
-# Run calibration
-ret, cameraMatrix, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, frameSize, None, None)
 
-print("[INFO] ret: \n", ret)
-print("[INFO] cameraMatrix: \n", cameraMatrix)
-print("[INFO] dist: \n", dist)
-print("[INFO] tvecs: \n", tvecs)
+    ret, cameraMatrix, dist, rvecs, tvecs = cv.calibrateCamera(objpoints, imgpoints, frameSize, None, None)
 
-# save the camera calibration results a json file
-with open("camera_calibration.json", "w") as f:
-    json.dump({"cameraMatrix": cameraMatrix.tolist(),
-               "distortion": dist.tolist()}, f, indent=2)
+    print("[INFO] ret: \n", ret)
+    print("[INFO] cameraMatrix: \n", cameraMatrix)
+    print("[INFO] dist: \n", dist)
+    print("[INFO] tvecs: \n", tvecs)
+
+    print("[INFO] Printing results json file ..")
+    with open("camera_calibration.json", "w") as f:
+        json.dump({"cameraMatrix": cameraMatrix.tolist(),
+                "distortion": dist.tolist()}, f, indent=2)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Compute calibration for camera')
+    parser.add_argument('--chessBoardHorizontal', '-H',
+                        type=int,
+                        nargs='?',
+                        required=True,
+                        help='an integer corresponding to the internal corners of the chessboard horizontal side')
+    parser.add_argument('--chessBoardVertical', '-V',
+                        type=int,
+                        nargs='?',
+                        required=True,
+                        help='an integer corresponding to the internal corners of the chessboard vertical side')
+    parser.add_argument('--chessBoardSize', '-S',
+                        type=int,
+                        nargs='?',
+                        required=True,
+                        help='the size in mm of on chessboard square')
+
+    args = parser.parse_args()
+    if args.chessBoardHorizontal is not None:
+        _chessboard_horizontal = args.chessBoardHorizontal
+    if args.chessBoardVertical is not None:
+        _chessboard_vertical = args.chessBoardVertical
+    if args.chessBoardSize is not None:
+        _chessboard_size = args.chessBoardSize
+        
+    main(chessboard_horizontal=_chessboard_horizontal,
+         chessboard_vertical=_chessboard_vertical,
+         chessboard_size=_chessboard_size)
