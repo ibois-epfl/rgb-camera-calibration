@@ -5,9 +5,12 @@ import argparse
 import sys
 import cv2 as cv
 import numpy as np
+import time
+import os
 
 def main(camera_index : int,
-         json_path : str) -> None:
+         json_path : str,
+         mapping : int) -> None:
 
     print("[INFO] Parsing Json calib file ..")
     with open(json_path, 'r') as calib_file:
@@ -29,34 +32,52 @@ def main(camera_index : int,
                                                         (calib_w,calib_h))
     x, y, w, h = roi
 
+    print(cap.get(3), cap.get(4))
+
+    DIR = "./out"
+    FPS = 25
+    record = False
+    fourcc = cv.VideoWriter_fourcc(*'XVID')
+    timestamp = time.strftime("%Y_%m_%d_%H_%M_%S")
+    filename = os.path.join(DIR, f'{timestamp}_record_undistorted.avi')
+    out = cv.VideoWriter(filename, fourcc, FPS, (calib_w,  calib_h))
+
     while True:
         ret, img = cap.read()
 
-        # undistort method 1
-        dst_1 = cv.undistort(img,
-                           calib_mtx,
-                           calib_dist,
-                           None,
-                           newCameraMatrix)
-        dst_1 = dst_1[y:y+h, x:x+w]
-        cv.imshow('caliResult1', dst_1)
-
-        # # undistort method 2
-        # mapx, mapy = cv.initUndistortRectifyMap(calib_mtx,
-        #                                         calib_dist,
-        #                                         None,
-        #                                         newCameraMatrix,
-        #                                         (calib_w,calib_h),
-        #                                         5)
-        # dst_2 = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
-        # cv.imshow('caliResult2', dst_2)
+        if ret==True and mapping==0:
+            dst = cv.undistort(img,
+                            calib_mtx,
+                            calib_dist,
+                            None,
+                            newCameraMatrix)
+            dst = dst[y:y+h, x:x+w]
+        else:
+            mapx, mapy = cv.initUndistortRectifyMap(calib_mtx,
+                                                    calib_dist,
+                                                    None,
+                                                    newCameraMatrix,
+                                                    (calib_w,calib_h),
+                                                    5)
+            dst = cv.remap(img, mapx, mapy, cv.INTER_LINEAR)
+        
+        show_frame = dst.copy()
+        if record:
+            out.write(dst)
+            cv.putText(show_frame, "recording", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        else:
+            cv.putText(show_frame, "NOT recording", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv.imshow('caliResult2', show_frame)
         
         key = cv.waitKey(1)
-        if key == ord("q"):
+        if key%256 == 32:
+            record = not record
+        elif key == ord("q"):
             print("[INFO] exiting...")
             break
 
     cap.release()
+    out.release()
     cv.destroyAllWindows()
 
 
@@ -71,12 +92,21 @@ if __name__ == '__main__':
                         type=str,
                         required=True,
                         help='the path to the Json undistortion param for the camera')
+    parser.add_argument('--mapping', '-M',
+                        type=int,
+                        required=False,
+                        help='Set 1 to undistort with mapping, 0 to undistort without')
 
     args = parser.parse_args()
     if args.cameraIndex is not None:
         _camera_index = args.cameraIndex
     if args.jsonPath is not None:
         _json_path = args.jsonPath
+    if args.mapping is not None:
+        _mapping = args.jsonPath
+    else:
+        _mapping = 0
         
-    main(camera_index=_camera_index,
-         json_path=_json_path)
+    main(camera_index =_camera_index,
+         json_path =_json_path,
+         mapping = _mapping)
