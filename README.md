@@ -26,6 +26,10 @@ Where `-I 2` indicates the index of the camera in respect to your usb ports.
 You will get out a json like this one:
 https://github.com/ibois-epfl/rgb-camera-calibration/blob/ced37c009627c7d429bf723992eb665b6f852c1a/camera_calibration.json#L1-L28
 
+and a [opencv yml](https://docs.opencv.org/4.x/dd/d74/tutorial_file_input_output_with_xml_yml.html) like this:
+
+
+
 ## A bit of theory behind camera calibration
 
 A camera has two types of parameters which describes itss model: `intrinsics` and `extrinsics`. These parameters describes how the camera works.

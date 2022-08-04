@@ -33,15 +33,15 @@ def main(camera_index : int) -> None:
         ret, frame = cap.read()
 
         sho_frame = frame.copy()
-        cv.putText(sho_frame, "Press 'Backspace' to capture", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        cv.putText(sho_frame, "Press 'space' to capture", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
         cv.putText(sho_frame, "Press 'q' to exit", (10, 60), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
         cv.imshow("preview", sho_frame)
         
         key = cv.waitKey(1)
-        if key == 32:  # backspace
+        if key == 32:  # space
             cv.imwrite("images/img" + str(i) + ".png", frame)
             i += 1
-            print(f"[INFO ]Image {i} saved")
+            print(f"[INFO] Image {i} saved")
         elif key == ord("q"):
             print("[INFO] exiting...")
             break
