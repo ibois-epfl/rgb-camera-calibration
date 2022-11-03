@@ -25,11 +25,11 @@ public:
     void write(FileStorage& fs) const                        //Write serialization for this class
     {
         fs << "{"
-           << "BoardSize_Width"  << boardSize.width
+           << "BoardSize_Width" << boardSize.width
            << "BoardSize_Height" << boardSize.height
-           << "Square_Size"         << squareSize
+           << "Square_Size" << squareSize
            << "Calibrate_Pattern" << patternToUse
-           << "Calibrate_NrOfFrameToUse" << nrFrames
+           << "Calibrate_NrOfFrameToUse" << frameAmount
            << "Calibrate_FixAspectRatio" << aspectRatio
            << "Calibrate_AssumeZeroTangentialDistortion" << calibZeroTangentDist
            << "Calibrate_FixPrincipalPointAtTheCenter" << calibFixPrincipalPoint
@@ -52,7 +52,7 @@ public:
         node["BoardSize_Height"] >> boardSize.height;
         node["Calibrate_Pattern"] >> patternToUse;
         node["Square_Size"]  >> squareSize;
-        node["Calibrate_NrOfFrameToUse"] >> nrFrames;
+        node["Calibrate_NrOfFrameToUse"] >> frameAmount;
         node["Calibrate_FixAspectRatio"] >> aspectRatio;
         node["Write_DetectedFeaturePoints"] >> writePoints;
         node["Write_extrinsicParameters"] >> writeExtrinsics;
@@ -90,7 +90,7 @@ public:
     {
         this->boardSize.width = boardSizeWidth; this->boardSize.height = boardSizeHeight;
         this->patternToUse = patternToUse; this->squareSize = squareSize;
-        this->nrFrames = nrFrames;
+        this->frameAmount = nrFrames;
         this->aspectRatio = aspectRatio;
         this->writePoints = writePoints;
         this->writeExtrinsics = writeExtrinsics;
@@ -121,9 +121,9 @@ public:
             cerr << "Invalid square size " << squareSize << endl;
             goodInput = false;
         }
-        if (nrFrames <= 0)
+        if (frameAmount <= 0)
         {
-            cerr << "Invalid number of frames " << nrFrames << endl;
+            cerr << "Invalid number of frames " << frameAmount << endl;
             goodInput = false;
         }
 
@@ -142,7 +142,7 @@ public:
                 if (isListOfImages(input) && readStringList(input, imageList))
                 {
                     inputType = IMAGE_LIST;
-                    nrFrames = (nrFrames < (int)imageList.size()) ? nrFrames : (int)imageList.size();
+                    frameAmount = (frameAmount < (int)imageList.size()) ? frameAmount : (int)imageList.size();
                 }
                 else
                     inputType = VIDEO_FILE;
@@ -235,7 +235,7 @@ public:
     Size boardSize;              // The size of the board -> Number of items by width and height
     Pattern calibrationPattern;  // One of the Chessboard, circles, or asymmetric circle pattern
     float squareSize;            // The size of a square in your defined unit (point, millimeter,etc).
-    int nrFrames;                // The number of frames to use from the input for calibration
+    int frameAmount;             // The amount of frames to use from the input for calibration
     float aspectRatio;           // The aspect ratio
     int delay;                   // In case of a video input
     bool writePoints;            // Write detected feature points
@@ -336,7 +336,7 @@ int main() {
 
     //! [capture]
     while(true){
-        if (frames.size() >= s.nrFrames) {
+        if (frames.size() >= s.frameAmount) {
             break;
         }
 
@@ -363,7 +363,7 @@ int main() {
         int baseLine = 0;
         string msg;
         if( mode == CAPTURING ) {
-            msg = cv::format( "%d/%d", (int)frames.size(), s.nrFrames );
+            msg = cv::format( "%d/%d", (int)frames.size(), s.frameAmount );
         } else {
             msg = "Press 'g' to start capture";
         }
