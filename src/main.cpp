@@ -53,19 +53,18 @@ int main()
             isCapturing = !isCapturing;
         }
 
-        if (calibrator.imageList.size() > 5) {
+        if (calibrator.imageList.size() >= 5) {
             break;
         }
         //! [await_input]
     }
 
-    cv::Mat imgForDisplay;
-    frame.copyTo(imgForDisplay);
-    cv::imshow("Image View", imgForDisplay);
-    calibrator.RunCalibration(&imgForDisplay);
+    calibrator.RunCalibration();
 
     cout << "camera matrix: " << calibrator.cameraMatrix << endl;
     cout << "dist coeffs: " << calibrator.distCoeffs << endl;
+
+    calibrator.Save("test_calib.yml");
 
     return 0;
 }

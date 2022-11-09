@@ -59,7 +59,7 @@ void Calibrator::RunCalibration(cv::Mat *imgForDisplay)
                                  rvecs, tvecs, calibFlag);
     } else {
         int iFixedPoint = -1;
-        if (releaseObject)
+        if (useFixedPoint)
             iFixedPoint = boardSize.width - 1;
         rms = calibrateCameraRO(objectPoints, imagePoints, imageSize, iFixedPoint,
                                 cameraMatrix, distCoeffs, rvecs, tvecs, newObjPoints,
@@ -163,4 +163,13 @@ void Calibrator::DetectPattern(cv::Mat *imgForDisplay) {
             img.copyTo(*imgForDisplay);
         }
     }
+}
+
+void Calibrator::Save(const std::string& filename) {
+    cv::FileStorage fs(filename, FileStorage::WRITE);
+    fs << "image_width" << imageSize.width;
+    fs << "image_height" << imageSize.height;
+    fs << "camera_matrix" << cameraMatrix;
+    fs << "distortion_coefficients" << distCoeffs;
+    fs.release();
 }

@@ -22,6 +22,7 @@ public:
     void ValidateAndUpdateFlag();
     void AddImage(const cv::Mat& image);
     void RunCalibration(cv::Mat *imgForDisplay = nullptr);
+    void Save(const std::string& filename);
 
     enum Pattern { NOT_EXISTING, CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
 
@@ -52,8 +53,7 @@ public:
     bool goodInput;
     int calibFlag;
 
-    // I'm not sure the meaning of this variable
-    bool releaseObject;
+    bool useFixedPoint = false;
 
     // image Param
     cv::Size imageSize;
