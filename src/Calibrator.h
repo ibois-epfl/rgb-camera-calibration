@@ -16,22 +16,23 @@
 
 class Calibrator {
 public:
-    Calibrator();
-    ~Calibrator();
+    Calibrator() {};
+    ~Calibrator() {};
 
     void ValidateAndUpdateFlag();
     void AddImage(const cv::Mat& image);
-    void SetGridWidth(float width);
-    void Calibrate(cv::Mat *imgForDisplay = nullptr);
+    void RunCalibration(cv::Mat *imgForDisplay = nullptr);
 
-    static enum Pattern { NOT_EXISTING, CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
+    enum Pattern { NOT_EXISTING, CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
 
 private:
     void DetectPattern(cv::Mat *imgForDisplay = nullptr);
+    void CalcBoardCornerPositions(std::vector<cv::Point3f>& corners) const;
+
 
 
 public:
-    cv::Size boardSize = cv::Size(19, 13);  // The size of the board -> Number of items by width and height
+    cv::Size boardSize = cv::Size(13, 9);  // The size of the board -> Number of items by width and height
     Pattern calibrationPattern = Pattern::CHESSBOARD;   // One of the Chessboard, circles, or asymmetric circle pattern
     float squareSize = 20.0f;                           // The size of a square in your defined unit (point, millimeter,etc).
     float aspectRatio = 0.0f;                           // The aspect ratio, can be 0 if no need
@@ -49,7 +50,20 @@ public:
 
     std::vector<cv::Mat> imageList;
     bool goodInput;
-    int flag;
+    int calibFlag;
+
+    // I'm not sure the meaning of this variable
+    bool releaseObject;
+
+    // image Param
+    cv::Size imageSize;
+
+    // result
+    cv::Mat cameraMatrix;
+    cv::Mat distCoeffs;
+    cv::Mat rvecs, tvecs;
+    double totalAvgErr;
+    std::vector<float> reprojErrs;
 
 private:
     std::vector<std::vector<cv::Point2f> > imagePoints;

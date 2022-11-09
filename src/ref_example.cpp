@@ -321,7 +321,7 @@ int main() {
 
     bool release_object = false;
 
-    // to enable the more accurate calibration, we need to set the flag
+    // to enable the more accurate calibration, we need to set the calibFlag
     grid_width = 35.4;
     release_object = true;
 

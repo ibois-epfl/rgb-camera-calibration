@@ -14,7 +14,7 @@ if(OpenCV_FOUND)
     message(STATUS "OpenCV libraries: ${OpenCV_LIBS}")
 endif()
 
-ADD_EXECUTABLE(calibrate src/calibrate.cpp)
+ADD_EXECUTABLE(calibrate src/Calibrator.cpp src/Calibrator.h src/main.cpp)
 
 target_include_directories(calibrate PUBLIC ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(calibrate ${OpenCV_LIBS})

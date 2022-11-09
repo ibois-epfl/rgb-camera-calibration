@@ -1,8 +1,72 @@
-//
-// Created by ibois on 03/11/22.
-//
-
 #include "Calibrator.h"
+
+using namespace std;
+using namespace cv;
+
+//! [board_corners]
+void Calibrator::CalcBoardCornerPositions(vector<Point3f>& corners) const
+{
+    corners.clear();
+
+    switch(calibrationPattern)
+    {
+        case Calibrator::CHESSBOARD:
+        case Calibrator::CIRCLES_GRID:
+            for( int i = 0; i < boardSize.height; ++i )
+                for( int j = 0; j < boardSize.width; ++j )
+                    corners.push_back(Point3f(j*squareSize, i*squareSize, 0));
+            break;
+
+        case Calibrator::ASYMMETRIC_CIRCLES_GRID:
+            for( int i = 0; i < boardSize.height; i++ )
+                for( int j = 0; j < boardSize.width; j++ )
+                    corners.push_back(Point3f((2*j + i % 2)*squareSize, i*squareSize, 0));
+            break;
+        default:
+            break;
+    }
+}
+
+//! [board_corners]
+void Calibrator::RunCalibration(cv::Mat *imgForDisplay)
+{
+    ValidateAndUpdateFlag();
+    DetectPattern(imgForDisplay);
+
+    //! [fixed_aspect]
+    cameraMatrix = Mat::eye(3, 3, CV_64F);
+    if( !useFisheye && calibFlag & CALIB_FIX_ASPECT_RATIO )
+        cameraMatrix.at<double>(0,0) = aspectRatio;
+    //! [fixed_aspect]
+    if (useFisheye) {
+        distCoeffs = Mat::zeros(4, 1, CV_64F);
+    } else {
+        distCoeffs = Mat::zeros(8, 1, CV_64F);
+    }
+
+    vector<vector<Point3f> > objectPoints(1);
+    CalcBoardCornerPositions(objectPoints[0]);
+    objectPoints[0][boardSize.width - 1].x = objectPoints[0][0].x + gridWidth;
+    auto newObjPoints = objectPoints[0];
+
+    objectPoints.resize(imagePoints.size(),objectPoints[0]);
+
+    // Reprojection error
+    double rms;
+
+    if (useFisheye) {
+        rms = fisheye::calibrate(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs,
+                                 rvecs, tvecs, calibFlag);
+    } else {
+        int iFixedPoint = -1;
+        if (releaseObject)
+            iFixedPoint = boardSize.width - 1;
+        rms = calibrateCameraRO(objectPoints, imagePoints, imageSize, iFixedPoint,
+                                cameraMatrix, distCoeffs, rvecs, tvecs, newObjPoints,
+                                calibFlag | CALIB_USE_LU);
+    }
+
+}
 
 void Calibrator::ValidateAndUpdateFlag()
 {
@@ -18,21 +82,21 @@ void Calibrator::ValidateAndUpdateFlag()
         goodInput = false;
     }
 
-    flag = 0;
+    calibFlag = 0;
 
-    if(calibFixPrincipalPoint) flag |= cv::CALIB_FIX_PRINCIPAL_POINT;
-    if(calibZeroTangentDist)   flag |= cv::CALIB_ZERO_TANGENT_DIST;
-    if(aspectRatio)            flag |= cv::CALIB_FIX_ASPECT_RATIO;
-    if(fixDistortion)          flag |= cv::CALIB_FIX_K1 | cv::CALIB_FIX_K2 | cv::CALIB_FIX_K3 | cv::CALIB_FIX_K4 | cv::CALIB_FIX_K5;
+    if(calibFixPrincipalPoint) calibFlag |= cv::CALIB_FIX_PRINCIPAL_POINT;
+    if(calibZeroTangentDist) calibFlag |= cv::CALIB_ZERO_TANGENT_DIST;
+    if(aspectRatio) calibFlag |= cv::CALIB_FIX_ASPECT_RATIO;
+    if(fixDistortion) calibFlag |= cv::CALIB_FIX_K1 | cv::CALIB_FIX_K2 | cv::CALIB_FIX_K3 | cv::CALIB_FIX_K4 | cv::CALIB_FIX_K5;
 
     if (useFisheye) {
-        // the fisheye model has its own enum, so overwrite the flags
-        flag = cv::fisheye::CALIB_FIX_SKEW | cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC;
-        if(fixDistortion)                   flag |= cv::fisheye::CALIB_FIX_K1;
-        if(fixDistortion)                   flag |= cv::fisheye::CALIB_FIX_K2;
-        if(fixDistortion)                   flag |= cv::fisheye::CALIB_FIX_K3;
-        if(fixDistortion)                   flag |= cv::fisheye::CALIB_FIX_K4;
-        if (calibFixPrincipalPoint) flag |= cv::fisheye::CALIB_FIX_PRINCIPAL_POINT;
+        // the cv::fisheye model has its own enum, so overwrite the flags
+        calibFlag = cv::fisheye::CALIB_FIX_SKEW | cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC;
+        if(fixDistortion) calibFlag |= cv::fisheye::CALIB_FIX_K1;
+        if(fixDistortion) calibFlag |= cv::fisheye::CALIB_FIX_K2;
+        if(fixDistortion) calibFlag |= cv::fisheye::CALIB_FIX_K3;
+        if(fixDistortion) calibFlag |= cv::fisheye::CALIB_FIX_K4;
+        if (calibFixPrincipalPoint) calibFlag |= cv::fisheye::CALIB_FIX_PRINCIPAL_POINT;
     }
 
 }
@@ -42,88 +106,17 @@ void Calibrator::AddImage(const cv::Mat &image) {
     image.copyTo(imageList.back());
 }
 
-void Calibrator::SetGridWidth(float width) {
-    gridWidth = width;
-    isGridWidthSet = true;
-}
-
-void Calibrator::Calibrate() {
-    //! [fixed_aspect]
-    cameraMatrix = Mat::eye(3, 3, CV_64F);
-    if( !s.useFisheye && s.flag & CALIB_FIX_ASPECT_RATIO )
-        cameraMatrix.at<double>(0,0) = s.aspectRatio;
-    //! [fixed_aspect]
-    if (s.useFisheye) {
-        distCoeffs = Mat::zeros(4, 1, CV_64F);
-    } else {
-        distCoeffs = Mat::zeros(8, 1, CV_64F);
-    }
-
-    vector<vector<Point3f> > objectPoints(1);
-    calcBoardCornerPositions(s.boardSize, s.squareSize, objectPoints[0], s.calibrationPattern);
-    objectPoints[0][s.boardSize.width - 1].x = objectPoints[0][0].x + grid_width;
-    newObjPoints = objectPoints[0];
-
-    objectPoints.resize(imagePoints.size(),objectPoints[0]);
-
-    //Find intrinsic and extrinsic camera parameters
-    double rms;
-
-    if (s.useFisheye) {
-        Mat _rvecs, _tvecs;
-        rms = fisheye::calibrate(objectPoints, imagePoints, imageSize, cameraMatrix, distCoeffs, _rvecs,
-                                 _tvecs, s.flag);
-
-        rvecs.reserve(_rvecs.rows);
-        tvecs.reserve(_tvecs.rows);
-        for(int i = 0; i < int(objectPoints.size()); i++){
-            rvecs.push_back(_rvecs.row(i));
-            tvecs.push_back(_tvecs.row(i));
-        }
-    } else {
-        int iFixedPoint = -1;
-        if (release_object)
-            iFixedPoint = s.boardSize.width - 1;
-        rms = calibrateCameraRO(objectPoints, imagePoints, imageSize, iFixedPoint,
-                                cameraMatrix, distCoeffs, rvecs, tvecs, newObjPoints,
-                                s.flag | CALIB_USE_LU);
-
-        cout << "New object points: " << newObjPoints << endl;
-        cout << "camera matrix: " << cameraMatrix << endl;
-        cout << "dist coeffs: " << distCoeffs << endl;
-    }
-
-    if (release_object) {
-        cout << "New board corners: " << endl;
-        cout << newObjPoints[0] << endl;
-        cout << newObjPoints[s.boardSize.width - 1] << endl;
-        cout << newObjPoints[s.boardSize.width * (s.boardSize.height - 1)] << endl;
-        cout << newObjPoints.back() << endl;
-    }
-
-    cout << "Re-projection error reported by calibrateCamera: "<< rms << endl;
-
-    bool ok = checkRange(cameraMatrix) && checkRange(distCoeffs);
-
-    objectPoints.clear();
-    objectPoints.resize(imagePoints.size(), newObjPoints);
-    totalAvgErr = computeReprojectionErrors(objectPoints, imagePoints, rvecs, tvecs, cameraMatrix,
-                                            distCoeffs, reprojErrs, s.useFisheye);
-
-
-}
-
 void Calibrator::DetectPattern(cv::Mat *imgForDisplay) {
     //------------------------- Camera Calibration ------------------------
     int chessBoardFlags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
 
     if(!useFisheye) {
-        // fast check erroneously fails with high distortions like fisheye
+        // fast check erroneously fails with high distortions like cv::fisheye
         chessBoardFlags |= cv::CALIB_CB_FAST_CHECK;
     }
 
     for(const auto& img: imageList){
-        auto imageSize = img.size();  // Format input image.
+        imageSize = img.size();  // Format input image.
         if( flipVertical )    flip( img, img, 0 );
 
         //! [find_pattern]
@@ -166,20 +159,8 @@ void Calibrator::DetectPattern(cv::Mat *imgForDisplay) {
             drawChessboardCorners( img, boardSize, cv::Mat(pointBuf), found );
         }
 
-        img.copyTo(*imgForDisplay);
-    }
-
-    if (imagePoints.size() < 2)
-    {
-        // cout << "No enough data to perform calibration." << endl;
-    }
-
-    // cout << "Calibrating..." << endl;
-    if(runCalibrationAndSave(s, imageSize,  cameraMatrix, distCoeffs, imagePoints, grid_width, release_object)){
-        // cout << "Calibration succeeded." << endl;
-        mode = CALIBRATED;
-    } else {
-        // cout << "Calibration failed." << endl;
-        mode = DETECTION;
+        if (imgForDisplay) {
+            img.copyTo(*imgForDisplay);
+        }
     }
 }
